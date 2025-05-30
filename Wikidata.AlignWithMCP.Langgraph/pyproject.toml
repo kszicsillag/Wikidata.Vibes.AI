@@ -1,0 +1,15 @@
+[project]
+name = "wikidata-alignwithmcp-langgraph"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "azure-identity==1.15.0",
+    "langchain>=0.3.25",
+    "langchain-mcp-adapters>=0.1.0",
+    "langchain-openai>=0.3.17",
+    "langgraph>=0.4.5",
+    "python-dotenv==1.1.0",
+    "typing-extensions>=4.13.2",
+]
