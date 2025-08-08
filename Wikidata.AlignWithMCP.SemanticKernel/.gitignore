@@ -1,0 +1,85 @@
+﻿# .gitignore for C# projects (Visual Studio, Rider, .NET)
+
+# Build results
+bin/
+obj/
+
+# Rider project files
+.idea/
+*.sln.iml
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# VS Code settings
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# NuGet
+*.nupkg
+# NuGet Packages folder can be ignored if not using package restore
+#packages/
+
+# Logs
+*.log
+
+# Others
+*.vspscc
+*.vssscc
+*.dbmdl
+*.pdb
+*.cache
+*.bak
+*.swp
+*.tmp
+*.orig
+*.rej
+
+# Rider caches
+.idea/
+*.sln.iml
+.idea_modules/
+.idea_config/
+.idea_system/
+.idea_workspace/
+
+# Rider local history
+.idea/.idea.LocalHistory/
+
+# JetBrains Rider
+*.DotSettings.user
+
+# Test results
+TestResults/
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings
+
+# Azure Pipelines
+*.azure-pipelines.yml
+
+# Local history for Visual Studio
+.localhistory/
+
+# Windows image file caches
+*.jfif
+*.jpe
+*.jpeg
+*.jpg
+*.png
+*.gif
+*.tiff
+*.tif
+*.ico
+
+# Rider logs
+.idea/.idea.log/
+
