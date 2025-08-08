@@ -1,6 +1,6 @@
 ﻿# Wikidata.AlignWithMCP.SemanticKernel - Developer Setup Guide
 
-This project integrates Semantic Kernel with a local MCP (Model Context Protocol) server for advanced LLM and knowledge base orchestration. Follow these steps to configure your environment as a new developer.
+This project integrates Semantic Kernel with a local MCP (Model Context Protocol) server for advanced LLM and knowledge base orchestration.
 
 ## Configuration Overview
 
@@ -9,8 +9,8 @@ All runtime settings are managed via `appsettings.json` and user secrets. The mo
 - **GitHubModels:ApiKey**: Your API key for accessing GitHub Models (LLM endpoints)
 - **McpServer:Path**: The path to your local MCP server Python file (e.g., `server.py`).
   - This project uses [mcp-wikidata](https://github.com/zzaebok/mcp-wikidata) as the recommended MCP server implementation.
-  - Clone the MCP server from: https://github.com/zzaebok/mcp-wikidata
-  - Set the path to the `server.py` file inside your local clone
+  - This project uses direct `uv` command call to start the server
+  - Refer to the documentation of the MCP server project for detailed setup instructions 
 - **McpServer:WorkingDirectory**: The working directory for the MCP server process
 
 ## Example `appsettings.json`
