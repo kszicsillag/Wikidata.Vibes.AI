@@ -1,45 +1,16 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 using ModelContextProtocol.Client;
-using Microsoft.Extensions.Logging;
 using Microsoft.SemanticKernel.Agents;
-using OpenTelemetry;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Wikidata.AlignWithMCP.SemanticKernel;
 
-// Build configuration to enable secret management
-var builder = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddUserSecrets<Program>(optional: true)
-    .AddEnvironmentVariables();
-var configuration = builder.Build();
-
-// Get the GitHub Models API key from secrets or environment variables
-var githubModelsApiKey = configuration["GitHubModels:ApiKey"];
-if (string.IsNullOrEmpty(githubModelsApiKey))
-{
-    Console.WriteLine("GitHub Models API key not found. Please set 'GitHubModels:ApiKey' in user-secrets or environment variables.");
-    return;
-}
-
-var wikidataMcpPath = configuration["McpServer:Path"];
-var wikidataMcpWorkingDir = configuration["McpServer:WorkingDirectory"];
-if (string.IsNullOrEmpty(wikidataMcpPath))
-{
-    Console.WriteLine("MCP server path not found. Please set 'McpServer:Path' in appsettings.json, user-secrets, or environment variables.");
-    return;
-}
-if (string.IsNullOrEmpty(wikidataMcpWorkingDir))
-{
-    Console.WriteLine("MCP server working directory not found. Please set 'McpServer:WorkingDirectory' in appsettings.json, user-secrets, or environment variables.");
-    return;
-}
+// Build configuration and validate settings
+var configuration = ConfigurationSetup.BuildConfiguration();
+var appConfig = ConfigurationSetup.LoadAndValidateConfiguration(configuration);
+// Configure OpenTelemetry
+var (traceProvider, meterProvider, loggerFactory) = TelemetrySetup.ConfigureOpenTelemetry();
 
 const string WikidataMcpName = "WikidataMCP";
 
@@ -47,59 +18,19 @@ await using IMcpClient mcpClient = await McpClientFactory.CreateAsync(
     new StdioClientTransport(new()
     {
         Name = WikidataMcpName,
-        WorkingDirectory = wikidataMcpWorkingDir,
+        WorkingDirectory = appConfig.WikidataMcpWorkingDirectory,
         Command = "uv",
-        Arguments = ["run", wikidataMcpPath],
+        Arguments = ["run", appConfig.WikidataMcpPath],
     }));
 
 var tools = await mcpClient.ListToolsAsync();
-
-// Retrieve the list of tools available on the GitHub server
-/*
-foreach (var tool in tools)
-{
-    Console.WriteLine($"{tool.Name} ({tool.Description})");
-}*/
-
-var resourceBuilder = ResourceBuilder
-    .CreateDefault()
-    .AddService("Wikidata.AlignWithMCP.SemanticKernel");
-
-// Enable model diagnostics with sensitive data.
-AppContext.SetSwitch("Microsoft.SemanticKernel.Experimental.GenAI.EnableOTelDiagnosticsSensitive", true);
-
-using var traceProvider = Sdk.CreateTracerProviderBuilder()
-    .SetResourceBuilder(resourceBuilder)
-    .AddSource("Microsoft.SemanticKernel*")
-    .AddConsoleExporter()
-    .Build();
-
-using var meterProvider = Sdk.CreateMeterProviderBuilder()
-    .SetResourceBuilder(resourceBuilder)
-    .AddMeter("Microsoft.SemanticKernel*")
-    .AddConsoleExporter()
-    .Build();
-
-using var loggerFactory = LoggerFactory.Create(builder =>
-{
-    // Add OpenTelemetry as a logging provider
-    builder.AddOpenTelemetry(options =>
-    {
-        options.SetResourceBuilder(resourceBuilder);
-        options.AddConsoleExporter();
-        // Format log messages. This is default to false.
-        options.IncludeFormattedMessage = true;
-        options.IncludeScopes = true;
-    });
-    builder.SetMinimumLevel(LogLevel.Information);
-});
 
 // Set up the OpenAI connector for Semantic Kernel to use GitHub Models API
 IKernelBuilder kbuilder = Kernel.CreateBuilder();
 kbuilder.Services.AddSingleton(loggerFactory);
 var kernel = kbuilder.AddOpenAIChatCompletion(
         modelId: "gpt-4.1-mini",
-        apiKey: githubModelsApiKey,
+        apiKey: appConfig.GitHubModelsApiKey,
         endpoint: new Uri("https://models.github.ai/inference")
     )
     .Build();
